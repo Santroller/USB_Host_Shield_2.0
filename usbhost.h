@@ -57,6 +57,10 @@ public:
         static void init() {
                 // Should be initialized by the user manually for now
         }
+#elif defined(ARDUINO_ARCH_RP2040)
+        static void init() {
+                
+        }
 #elif !defined(SPDR)
         static void init() {
                 SPI_SS::SetDirWrite();
@@ -122,6 +126,8 @@ typedef SPi< P14, P13, P12, P15 > spi;
 typedef SPi< P18, P23, P19, P5 > spi;
 #elif defined(ARDUINO_NRF52840_FEATHER)
 typedef SPi< P26, P25, P24, P5 > spi;
+#elif defined(ARDUINO_ARCH_RP2040)
+typedef SPi< P26, P25, P24, P5 > spi;
 #else
 #error "No SPI entry in usbhost.h"
 #endif
@@ -182,8 +188,9 @@ void MAX3421e< SPI_SS, INTR >::regWr(uint8_t reg, uint8_t data) {
         USB_SPI.beginTransaction(SPISettings(26000000, MSBFIRST, SPI_MODE0)); // The MAX3421E can handle up to 26MHz, use MSB First and SPI mode 0
 #endif
         SPI_SS::Clear();
+#ifdef ARDUINO_ARCH_RP2040
 
-#if USING_SPI4TEENSY3
+#elif defined(USING_SPI4TEENSY3)
         uint8_t c[2];
         c[0] = reg | 0x02;
         c[1] = data;
@@ -235,6 +242,8 @@ uint8_t* MAX3421e< SPI_SS, INTR >::bytesWr(uint8_t reg, uint8_t nbytes, uint8_t*
         HAL_SPI_Transmit(&SPI_Handle, &data, 1, HAL_MAX_DELAY);
         HAL_SPI_Transmit(&SPI_Handle, data_p, nbytes, HAL_MAX_DELAY);
         data_p += nbytes;
+#elif defined(ARDUINO_ARCH_RP2040)
+
 #elif !defined(__AVR__) || !defined(SPDR)
 #if defined(ESP8266) || defined(ESP32)
         yield();
@@ -288,6 +297,8 @@ uint8_t MAX3421e< SPI_SS, INTR >::regRd(uint8_t reg) {
         spi4teensy3::send(reg);
         uint8_t rv = spi4teensy3::receive();
         SPI_SS::Set();
+#elif defined(ARDUINO_ARCH_RP2040)
+        uint8_t rv = 0;
 #elif defined(STM32F4)
         HAL_SPI_Transmit(&SPI_Handle, &reg, 1, HAL_MAX_DELAY);
         uint8_t rv = 0;
@@ -327,6 +338,7 @@ uint8_t* MAX3421e< SPI_SS, INTR >::bytesRd(uint8_t reg, uint8_t nbytes, uint8_t*
         spi4teensy3::send(reg);
         spi4teensy3::receive(data_p, nbytes);
         data_p += nbytes;
+#elif defined(ARDUINO_ARCH_RP2040)
 #elif defined(SPI_HAS_TRANSACTION) && !defined(ESP8266) && !defined(ESP32)
         USB_SPI.transfer(reg);
         memset(data_p, 0, nbytes); // Make sure we send out empty bytes
