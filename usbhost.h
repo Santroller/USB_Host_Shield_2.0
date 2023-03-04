@@ -34,6 +34,10 @@ e-mail   :  support@circuitsathome.com
 #include <sys/types.h>
 #endif
 
+#undef SPI_CLK
+#undef SPI_MISO
+#undef SPI_MOSI
+#undef SPI_SS
 /* SPI initialization */
 template< typename SPI_CLK, typename SPI_MOSI, typename SPI_MISO, typename SPI_SS > class SPi {
 public:
